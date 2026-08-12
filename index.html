@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RazaVideoToAudio- Fast Video to MP3 Converter</title>
+    
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090a0f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="audtovidlogo.jpg">
+
     <!-- Pure JS MP3 Encoder Library -->
     <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
     <style>
@@ -38,7 +47,7 @@
             justify-content: space-between;
         }
 
-        /* HEADER (LEFT-ALIGNED) */
+        /* HEADER */
         header {
             background: rgba(18, 20, 29, 0.75);
             backdrop-filter: blur(16px);
@@ -54,7 +63,13 @@
             margin: 0 auto;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
             gap: 12px;
         }
 
@@ -74,6 +89,27 @@
             background: linear-gradient(135deg, #ffffff 30%, #f97316 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        /* INSTALL APP BUTTON */
+        .btn-install {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn-install:active {
+            transform: scale(0.95);
         }
 
         /* HERO & MAIN SECTION */
@@ -374,11 +410,16 @@
 </head>
 <body>
 
-    <!-- HEADER (LEFT-ALIGNED WITH IMAGE LOGO) -->
+    <!-- HEADER -->
     <header>
         <div class="header-container">
-            <img src="audtovidlogo.jpg" alt="Logo" class="brand-logo-img">
-            <div class="brand-name">RazaVOX</div>
+            <div class="header-brand">
+                <img src="audtovidlogo.jpg" alt="Logo" class="brand-logo-img">
+                <div class="brand-name">RazaVOX</div>
+            </div>
+            <button id="installAppBtn" class="btn-install">
+                📲 Install App
+            </button>
         </div>
     </header>
 
@@ -472,6 +513,37 @@
     </footer>
 
     <script>
+        // Service Worker Register (PWA Support)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered:', reg.scope))
+                    .catch(err => console.log('SW Registration Failed:', err));
+            });
+        }
+
+        // Install App Button Handler
+        let deferredPrompt;
+        const installAppBtn = document.getElementById('installAppBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installAppBtn.style.display = 'inline-flex';
+        });
+
+        installAppBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installAppBtn.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // Video to MP3 Conversion Logic
         const uploader = document.getElementById('videoUploader');
         const uploadText = document.getElementById('uploadText');
         const statusContainer = document.getElementById('statusContainer');
