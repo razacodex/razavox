@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RazaVideoToAudio- Fast Video to MP3 Converter</title>
+    <!-- Pure JS MP3 Encoder Library -->
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+    <style>
+        :root {
+            --primary: #f97316;
+            --primary-hover: #ea580c;
+            --accent: #eab308;
+            --success: #22c55e;
+            --bg-dark: #090a0f;
+            --card-bg: #12141d;
+            --card-border: #232738;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 50% 0%, rgba(249, 115, 22, 0.08) 0px, transparent 70%),
+                radial-gradient(at 100% 100%, rgba(234, 179, 8, 0.05) 0px, transparent 50%);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* HEADER (LEFT-ALIGNED) */
+        header {
+            background: rgba(18, 20, 29, 0.75);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 14px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+        }
+
+        .brand-logo-img {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.25);
+        }
+
+        .brand-name {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #ffffff 30%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* HERO & MAIN SECTION */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .hero-wrapper {
+            max-width: 680px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-text {
+            text-align: center;
+            width: 100%;
+        }
+
+        .author-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(249, 115, 22, 0.1);
+            color: #fdba74;
+            border: 1px solid rgba(249, 115, 22, 0.25);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+        }
+
+        .hero-title {
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 40%, #fdba74 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        /* CONVERTER CARD */
+        .converter-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 32px 24px;
+            width: 100%;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(249, 115, 22, 0.05);
+            text-align: center;
+            position: relative;
+            margin-bottom: 28px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .card-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        /* UPLOAD DROP ZONE */
+        .drop-zone {
+            border: 2px dashed #2e354f;
+            border-radius: 16px;
+            padding: 32px 16px;
+            background: rgba(9, 10, 15, 0.7);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--primary);
+            background: rgba(249, 115, 22, 0.05);
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.15);
+        }
+
+        .upload-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .drop-zone-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* FEATURE CARDS */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: rgba(18, 20, 29, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            transition: border-color 0.2s ease;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(249, 115, 22, 0.4);
+        }
+
+        .feature-icon {
+            font-size: 22px;
+            background: rgba(249, 115, 22, 0.12);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+
+        .feature-info h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .feature-info p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* STATUS & PROGRESS */
+        #statusContainer {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fdba74;
+        }
+
+        /* OUTPUT AREA */
+        #outputArea {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        audio {
+            width: 100%;
+            margin-bottom: 16px;
+            border-radius: 8px;
+        }
+
+        .btn-download {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-download:active {
+            transform: scale(0.98);
+        }
+
+        /* CLEAN COMPACT FOOTER */
+        footer {
+            background: rgba(9, 10, 15, 0.95);
+            border-top: 1px solid var(--card-border);
+            padding: 18px 20px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .social-btn {
+            width: 34px;
+            height: 34px;
+            background: #12141d;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .social-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        .social-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        footer strong {
+            color: var(--text-light);
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 600px) {
+            .hero-title {
+                font-size: 26px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER (LEFT-ALIGNED WITH IMAGE LOGO) -->
+    <header>
+        <div class="header-container">
+            <img src="audtovidlogo.jpg" alt="Logo" class="brand-logo-img">
+            <div class="brand-name">RazaVOX</div>
+        </div>
+    </header>
+
+    <!-- HERO & MAIN CONVERTER SECTION -->
+    <main>
+        <div class="hero-wrapper">
+            <div class="hero-text">
+                <span class="author-badge">✨ Created by Mushahid Raza</span>
+                <h1 class="hero-title">Extract High-Quality MP3 Audio from Any Video</h1>
+                <p class="hero-subtitle">Fast, secure, and browser-based audio converter. Convert your video files to MP3 format instantly without uploading data to external servers.</p>
+
+                <!-- CONVERTER CARD -->
+                <div class="converter-card">
+                    <div class="card-header">
+                        <h2>Video to MP3</h2>
+                        <p>Select an MP4, MOV, or WEBM file</p>
+                    </div>
+
+                    <div class="drop-zone">
+                        <div class="upload-icon">📁</div>
+                        <div class="drop-zone-text" id="uploadText">Tap to choose video</div>
+                        <div class="drop-zone-subtext">MP4, MOV, WEBM, AVI</div>
+                        <input type="file" id="videoUploader" accept="video/*">
+                    </div>
+
+                    <div id="statusContainer">
+                        <div class="spinner" id="spinner"></div>
+                        <div class="status-badge" id="statusText">Processing...</div>
+                    </div>
+
+                    <div id="outputArea">
+                        <audio id="audioPreview" controls></audio>
+                        <a id="downloadBtn" class="btn-download" download="extracted_audio.mp3">
+                            ⬇️ Download MP3 Audio
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 4 FEATURE CARDS -->
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-info">
+                            <h4>Ultra Fast</h4>
+                            <p>Instant client-side encoding</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-info">
+                            <h4>100% Private</h4>
+                            <p>Files stay on your device</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎵</div>
+                        <div class="feature-info">
+                            <h4>HD Sound</h4>
+                            <p>128kbps crystal audio</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <div class="feature-info">
+                            <h4>Mobile Ready</h4>
+                            <p>Works smoothly on phones</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="social-links">
+            <!-- YouTube -->
+            <a href="https://youtube.com/@JK92Gaming" target="_blank" class="social-btn" aria-label="YouTube">
+                <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            </a>
+            <!-- Instagram -->
+            <a href="https://instagram.com/yourusername" target="_blank" class="social-btn" aria-label="Instagram">
+                <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <!-- Telegram -->
+            <a href="https://t.me/yourusername" target="_blank" class="social-btn" aria-label="Telegram">
+                <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.562 8.161c-.18.717-.962 4.084-1.362 5.411-.169.563-.376.753-.577.771-.437.041-.77-.289-1.194-.567-.663-.435-1.038-.705-1.682-1.129-.744-.489-.262-.758.162-1.198.111-.115 2.039-1.868 2.077-2.029.005-.02.01-.096-.035-.136s-.108-.026-.155-.015c-.066.015-1.127.717-3.181 2.103-.301.207-.573.308-.816.303-.268-.006-.784-.152-1.167-.277-.47-.153-.843-.234-.811-.494.017-.136.198-.275.544-.417 2.134-.928 3.558-1.54 4.272-1.835 2.035-.842 2.457-.988 2.733-.993.061 0 .198.014.287.087.075.062.096.146.106.205.01.059.022.212.012.33z"/></svg>
+            </a>
+        </div>
+        <p>© 2026 <strong>RAZAAUDIOTOVIDEO</strong> • Created with ❤️ by <strong>Mushahid Raza</strong></p>
+    </footer>
+
+    <script>
+        const uploader = document.getElementById('videoUploader');
+        const uploadText = document.getElementById('uploadText');
+        const statusContainer = document.getElementById('statusContainer');
+        const statusText = document.getElementById('statusText');
+        const spinner = document.getElementById('spinner');
+        const outputArea = document.getElementById('outputArea');
+        const audioPreview = document.getElementById('audioPreview');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        uploader.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            outputArea.style.display = 'none';
+            statusContainer.style.display = 'block';
+            spinner.style.display = 'block';
+            uploadText.innerText = "Selected: " + file.name;
+            statusText.innerText = "Reading video file...";
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                statusText.innerText = "Decoding audio...";
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                
+                statusText.innerText = "Encoding to MP3...";
+
+                setTimeout(() => {
+                    if (typeof lamejs === 'undefined') {
+                        spinner.style.display = 'none';
+                        statusText.innerText = "❌ Encoder library failed to load. Please check internet connection.";
+                        return;
+                    }
+
+                    const mp3Blob = convertToMp3(audioBuffer);
+                    const audioUrl = URL.createObjectURL(mp3Blob);
+
+                    audioPreview.src = audioUrl;
+                    downloadBtn.href = audioUrl;
+
+                    spinner.style.display = 'none';
+                    statusText.innerText = "✨ Audio extraction complete!";
+                    outputArea.style.display = 'block';
+                }, 100);
+
+            } catch (err) {
+                console.error(err);
+                spinner.style.display = 'none';
+                statusText.innerText = "❌ Error processing video. Try another file.";
+            }
+        });
+
+        function convertToMp3(audioBuffer) {
+            const channels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
+            
+            const samplesLeft = audioBuffer.getChannelData(0);
+            const samplesRight = channels > 1 ? audioBuffer.getChannelData(1) : samplesLeft;
+            
+            const sampleBlockSize = 1152;
+            const mp3Data = [];
+
+            const leftInt16 = new Int16Array(samplesLeft.length);
+            const rightInt16 = new Int16Array(samplesRight.length);
+
+            for (let i = 0; i < samplesLeft.length; i++) {
+                let sL = Math.max(-1, Math.min(1, samplesLeft[i]));
+                leftInt16[i] = sL < 0 ? sL * 32768 : sL * 32767;
+                
+                let sR = Math.max(-1, Math.min(1, samplesRight[i]));
+                rightInt16[i] = sR < 0 ? sR * 32768 : sR * 32767;
+            }
+
+            for (let i = 0; i < leftInt16.length; i += sampleBlockSize) {
+                const leftChunk = leftInt16.subarray(i, i + sampleBlockSize);
+                const rightChunk = rightInt16.subarray(i, i + sampleBlockSize);
+                
+                let mp3buf = (channels === 1) 
+                    ? mp3encoder.encodeBuffer(leftChunk)
+                    : mp3encoder.encodeBuffer(leftChunk, rightChunk);
+                
+                if (mp3buf.length > 0) mp3Data.push(mp3buf);
+            }
+
+            const mp3buf = mp3encoder.flush();
+            if (mp3buf.length > 0) mp3Data.push(mp3buf);
+
+            return new Blob(mp3Data, { type: 'audio/mp3' });
+        }
+    </script>
+</body>
+</html>
