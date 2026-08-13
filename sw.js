@@ -1,4 +1,4 @@
-const CACHE_NAME = 'razavox-v2';
+const CACHE_NAME = 'razavox-v3';
 
 const urlsToCache = [
   './',
